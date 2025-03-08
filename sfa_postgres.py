@@ -10,16 +10,28 @@
 #     "sqlalchemy",
 # ]
 # ///
-import os
-import argparse
-from smolagents import CodeAgent, LiteLLMModel, tool
-from dotenv import load_dotenv
-from sqlalchemy import create_engine, inspect, text
 
-# Load environment variables
-load_dotenv()
+# =============================================================================
+# Configuration Settings
+# =============================================================================
 
-# Define model aliases
+# Database Configuration
+POSTGRES_CONFIG = {
+    "host": "localhost",
+    "user": "postgres",
+    "password": "postgres",
+    "database": "practice",
+}
+DB_URL = f"postgresql://{POSTGRES_CONFIG['user']}:{POSTGRES_CONFIG['password']}@{POSTGRES_CONFIG['host']}/{POSTGRES_CONFIG['database']}"
+
+# LLM Model Configuration
+DEFAULT_PROVIDER = "openai"
+DEFAULT_MODEL = "openai/gpt-4o"
+
+# Database Schema Configuration
+SYSTEM_SCHEMAS = ['information_schema', 'pg_catalog', 'pg_toast']
+
+# Model Provider Configuration
 MODEL_ALIASES = {
     "groq/llama": {"provider": "groq", "model_id": "groq/llama-3.3-70b-versatile"},
     "groq/deepseek": {"provider": "groq", "model_id": "groq/deepseek-r1-distill-llama-70b"},
@@ -29,6 +41,19 @@ MODEL_ALIASES = {
     "openrouter/sonnet": {"provider": "openrouter", "model_id": "openrouter/anthropic/claude-3.5-sonnet"},
 }
 
+# =============================================================================
+# Code Implementation
+# =============================================================================
+
+import os
+import argparse
+from smolagents import CodeAgent, LiteLLMModel, tool
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, inspect, text
+
+# Load environment variables
+load_dotenv()
+
 # API key mapping
 API_KEYS = {
     "groq": os.environ.get("GROQ_API_KEY"),
@@ -37,7 +62,7 @@ API_KEYS = {
 }
 
 # Set up PostgreSQL connection
-engine = create_engine("postgresql://postgres:postgres@localhost/practice")
+engine = create_engine(DB_URL)
 
 # Get database schema information
 inspector = inspect(engine)
@@ -79,7 +104,7 @@ Args:
 @tool
 def sql_engine(query: str) -> str:
     """
-    Allows you to perform SQL queries on the PostgreSQL database named 'practice'.
+    Allows you to perform SQL queries on the PostgreSQL database.
     Returns a string representation of the result.
     
     Important: Only query user tables in the 'public' schema. DO NOT query internal PostgreSQL schemas 
@@ -126,8 +151,8 @@ def get_model(alias=None, provider=None, model_id=None):
         provider = config["provider"]
         model_id = config["model_id"]
     elif not (provider and model_id):
-        provider = "openai"
-        model_id = "openai/gpt-4o"
+        provider = DEFAULT_PROVIDER
+        model_id = DEFAULT_MODEL
         print(f"Using default model: {model_id}")
     api_key = API_KEYS.get(provider)
     if not api_key:
