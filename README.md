@@ -1,4 +1,6 @@
-# Database Migration Tool
+# Postgres Agent
+
+Uses SmolAgents to interact with a Postgres DB. Incredibly fast with Groq's models, and quite intelligent at extracting information with Anthropics Claude models(Accessed here through Openrouter so it will cost ~10% more).
 
 ## Prerequisites
 - Python 3.8 or higher
